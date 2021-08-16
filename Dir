@@ -1,0 +1,408 @@
+#include <iostream>
+using namespace std;
+
+class Dir{
+    public:
+        class Node{
+            public:
+            string name;
+            Node* rightSibling;
+            Node* leftChild;
+
+            Node(){
+                name = "/";
+                rightSibling = NULL;
+                leftChild = NULL;
+            }
+        };
+
+        Node* dir;
+
+        Dir(){
+            dir = new Node();
+        }
+
+        void cmd_mkdir(string path, string setName){
+            Node* iDir = dir;
+            if(path[1] == '\0'){
+                if(iDir->leftChild != NULL){
+                    iDir = iDir->leftChild;
+                    while(iDir->rightSibling != NULL){
+                        iDir = iDir->rightSibling;
+                    }
+                    iDir->rightSibling = new Node();
+                    iDir->rightSibling->name = setName;
+                    return;
+                }
+                else{
+                    iDir->leftChild = new Node();
+                iDir = iDir->leftChild;
+                iDir->name = setName;
+                return;
+                }
+            }
+            for(int i = 1; i<path.length(); i++){
+                if(path[i] == '\0') break;
+                int idx = i;
+                string temp;
+                while(path[i] != '/' && i < path.length()){
+                    i++;
+                }
+                
+                temp = path.substr(idx, i - idx);
+                Node* it = iDir;
+                
+                    it = it->leftChild;
+                    while(it->name != temp && it != NULL){
+                        it = it->rightSibling;
+                    }
+                    if(it->name == temp){
+                        iDir = it;
+                    }else if(it == NULL){
+                        it = new Node();
+                        it->name = setName;
+                        return;
+                    }    
+            }
+            if(iDir->leftChild == NULL){
+                iDir->leftChild = new Node();
+                iDir = iDir->leftChild;
+                iDir->name = setName;
+            }else{
+                iDir = iDir->leftChild;
+                while(iDir->rightSibling != NULL){
+                    iDir = iDir->rightSibling;
+                }
+
+                iDir->rightSibling = new Node();
+                iDir = iDir->rightSibling;
+                iDir->name = setName;
+            }
+
+            
+
+            // iDir->leftChild = new Node();
+            // iDir = iDir->leftChild;
+            // iDir->name = setName;
+        }
+
+        void rm(string path){
+            Node* iDir = dir;
+            Node* pDir = dir;
+            if(path[1] == '\0'){
+                dir->leftChild = NULL;
+            }
+            int flag = 0;
+            for(int i = 1; i<path.length(); i++){
+                if(path[i] == '\0') break;
+                int idx = i;
+                string temp;
+                while(path[i] != '/'){
+                    i++;
+                }
+
+                temp = path.substr(idx, i - idx);
+                Node* it = iDir;
+                if(it->leftChild->name == temp){
+                    pDir = iDir;
+                    iDir = it->leftChild;
+                    flag = 1;
+                }else{
+                    it = it->leftChild;
+                
+                    while(it->rightSibling->name != temp && it->rightSibling != NULL){
+                        it = it->rightSibling;
+                    }
+                    if(it->rightSibling->name == temp){
+                        pDir = it;
+                        iDir = it->rightSibling;
+                        flag = 2;
+                    }else if(it == NULL){
+                        cout << "Error!! No Dir Found";
+                        return;
+                    }
+                }
+                
+            }
+            if(flag == 1){
+                pDir->leftChild = NULL;
+                delete iDir;
+            }
+            else if(flag == 2){
+                pDir->rightSibling = NULL;
+                delete iDir;
+            }else{
+                cout <<" Exception";
+                return;
+            }
+
+
+        }
+
+        void cmd_cp(string path, string dest){
+            Node* iDir = dir;
+            if(path[1] == '\0'){
+                cout <<"please enter path";
+                return;
+            }
+            for(int i = 1; i<path.length(); i++){
+                if(path[i] == '\0') break;
+                int idx = i;
+                string temp;
+                while(path[i] != '/' && i < path.length()){
+                    i++;
+                }
+                
+                temp = path.substr(idx, i - idx);
+                Node* it = iDir;
+                
+                    it = it->leftChild;
+                    while(it->name != temp && it != NULL){
+                        it = it->rightSibling;
+                    }
+                    if(it->name == temp){
+                        iDir = it;
+                    }else if(it == NULL){
+                        cout << "Path not correct";
+                        return;
+                    }    
+            }
+
+            Node* jDir = dir;
+            
+                for(int i = 1; i<dest.length(); i++){
+                if(path[i] == '\0') break;
+                int idx = i;
+                string temp;
+                while(dest[i] != '/' && i < dest.length()){
+                    i++;
+                }
+                
+                temp = dest.substr(idx, i - idx);
+                Node* it = jDir;
+                
+                    it = it->leftChild;
+                    while(it->name != temp && it != NULL){
+                        it = it->rightSibling;
+                    }
+                    if(it->name == temp){
+                        jDir = it;
+                    }else if(it == NULL){
+                        cout <<"Path Not Correct";
+                        return;
+                    }    
+                }
+            
+            if(jDir->leftChild == NULL){
+                //cout <<"yup";
+                Node* temp = new Node();
+                temp->name = iDir->name;
+                temp->leftChild = iDir->leftChild;
+                jDir->leftChild = temp;
+            }
+            else{
+                jDir = jDir->leftChild;
+                while(jDir->rightSibling != NULL){
+                    jDir = jDir->rightSibling;
+                }
+                Node* temp = new Node();
+                temp->name = iDir->name;
+                temp->leftChild = iDir->leftChild;
+                jDir->rightSibling = temp;
+            }
+            
+        }
+
+        void cmd_mv(string path, string dest){
+            
+            Node* iDir = dir;
+            Node* pDir = dir;
+            if(path[1] == '\0'){
+                cout <<"path not specified";
+                return;
+            }
+            int flag = 0;
+            for(int i = 1; i<path.length(); i++){
+                if(path[i] == '\0') break;
+                int idx = i;
+                string temp;
+                while(path[i] != '/' && i < path.length()){
+                    i++;
+                }
+
+                temp = path.substr(idx, i - idx);
+                Node* it = iDir;
+                if(it->leftChild->name == temp){
+                    pDir = it;
+                    iDir = it->leftChild;
+                    flag = 1;
+                }else{
+                    it = it->leftChild;
+                
+                    while(it->rightSibling->name != temp && it->rightSibling != NULL){
+                        it = it->rightSibling;
+                    }
+                    if(it->rightSibling->name == temp){
+                        pDir = it;
+                        iDir = it->rightSibling;
+                        flag = 2;
+                    }else if(it == NULL){
+                        cout << "Error!! No Dir Found";
+                        return;
+                    }
+                }
+                
+            }
+            //cout << pDir->name <<" " <<iDir->name <<endl;
+            
+            
+            Node* jDir = dir;
+            
+                for(int i = 1; i<dest.length(); i++){
+                if(dest[i] == '\0') break;
+                int idx = i;
+                string temp;
+                while(dest[i] != '/' && i < dest.length()){
+                    i++;
+                }
+                
+                temp = dest.substr(idx, i - idx);
+                Node* it = jDir;
+                
+                    it = it->leftChild;
+                    while(it->name != temp && it != NULL){
+                        it = it->rightSibling;
+                    }
+                    if(it->name == temp){
+                        jDir = it;
+                    }else if(it == NULL){
+                        cout <<"Path Not Correct";
+                        return;
+                    }    
+                }
+
+            cout << jDir->name << endl;
+            
+            if(jDir->leftChild == NULL){
+                Node* temp = new Node();
+                temp->name = iDir->name;
+                temp->leftChild = iDir->leftChild;
+                jDir->leftChild = temp;
+            }
+            else{
+                jDir = jDir->leftChild;
+                while(jDir->rightSibling != NULL){
+                    jDir = jDir->rightSibling;
+                }
+                Node* temp = new Node();
+                temp->name = iDir->name;
+                temp->leftChild = iDir->leftChild;
+                jDir->rightSibling = temp;
+            }
+            if(flag == 1){
+                pDir->leftChild = iDir->rightSibling;
+                
+                delete iDir;
+            }
+            else if(flag == 2){
+                pDir->rightSibling = iDir->rightSibling;
+                delete iDir;
+                
+            }else{
+                cout <<" Exception";
+                return;
+            }
+        }
+
+        /*Node* searchFunc(Node* ptr, string word){
+            Node* it = ptr;
+            if(ptr == NULL) return;
+            if(ptr->name == word){
+                return ptr;
+            }
+            while(it != NULL){
+                while(it->rightSibling != NULL){
+                    searchFunc(it->rightSibling);
+                    it = it->rightSibling;
+                }
+                it = it->leftChild;
+            }
+        }*/
+
+        int find(string path){
+            Node* iDir = dir;
+            if(path[1] == '\0'){
+                cout <<"please enter path";
+                return 0;
+            }
+            for(int i = 1; i<path.length(); i++){
+                if(path[i] == '\0') break;
+                int idx = i;
+                string temp;
+                while(path[i] != '/' && i < path.length()){
+                    i++;
+                }
+                
+                temp = path.substr(idx, i - idx);
+                Node* it = iDir;
+                
+                    it = it->leftChild;
+                    while(it->name != temp && it != NULL){
+                        it = it->rightSibling;
+                    }
+                    if(it->name == temp){
+                        iDir = it;
+                    }else if(it == NULL){
+                        cout << "Path not correct";
+                        return 0;
+                    }    
+            }
+            int count = countFunc(iDir);
+            return count;
+
+        }
+
+        int countFunc(Node* ptr){
+            int count = 0;
+            Node* it = ptr;
+            if(ptr == NULL) return 0;
+            count++;
+            it = it->leftChild;
+            while(it != NULL){
+                count += countFunc(it);
+                it = it->rightSibling;
+            }
+            return count;
+        }
+
+        void printFunc(Node* ptr){
+            Node* it = ptr;
+            if(ptr == NULL) return;
+            cout << ptr->name <<" ";
+            it = it->leftChild;
+            while(it != NULL){
+                printFunc(it);
+                it = it->rightSibling;
+            }
+            
+        }
+
+
+};
+
+int main(){
+    Dir* ourDir = new Dir();
+    ourDir->cmd_mkdir("/","aa");
+    ourDir->cmd_mkdir("/aa","ab");
+    ourDir->cmd_mkdir("/aa","ac");
+    ourDir->cmd_mkdir("/","ba");
+    ourDir->cmd_cp("/aa","/ba");
+    
+    ourDir->printFunc(ourDir->dir);
+    cout <<"\n";
+    cout << ourDir->dir->name << "\n";
+    cout << ourDir->find("/aa");
+
+    return 0;
+
+}
